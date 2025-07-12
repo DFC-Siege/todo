@@ -1,11 +1,15 @@
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Layout, Rect},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Widget},
+    layout::{Alignment, Constraint, Flex, Layout, Rect},
+    style::{Color, Style},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Clear, Paragraph, Tabs, Widget},
 };
 
-use crate::{models::state::State, ui::todo_list};
+use crate::{
+    models::state::{Popup, State},
+    ui::todo_list,
+};
 
 pub fn draw_main(frame: &mut Frame, rect: Rect, state: &State) {
     let block = Block::new()
@@ -15,9 +19,57 @@ pub fn draw_main(frame: &mut Frame, rect: Rect, state: &State) {
 
     let inner_area = block.inner(rect);
 
-    Paragraph::new("main")
-        .block(block)
-        .render(rect, frame.buffer_mut());
+    frame.render_widget(block, rect);
 
-    todo_list::draw(frame, inner_area, state);
+    let rects = Layout::new(
+        ratatui::layout::Direction::Vertical,
+        [
+            Constraint::Length(1),
+            Constraint::Length(1),
+            Constraint::Min(0),
+        ],
+    )
+    .split(inner_area);
+
+    let tabs: Vec<String> = state.items.iter().map(|i| i.title.to_owned()).collect();
+    Tabs::new(tabs)
+        .select(state.get_current_item_index())
+        .render(rects[0], frame.buffer_mut());
+
+    todo_list::draw(frame, rects[2], state);
+
+    match state.popup {
+        Popup::None => {}
+        Popup::Create => {
+            render_create_widget(frame, rect, state);
+        }
+        _ => {}
+    }
+}
+
+fn render_create_widget(frame: &mut Frame, rect: Rect, state: &State) {
+    let block = Block::bordered().title("Create new todo");
+    let area = popup_area(rect, 60, 20);
+
+    let (input_text, style) = if state.input.value.is_empty() {
+        ("Enter title...", Style::default().fg(Color::Gray))
+    } else {
+        (
+            state.input.value.as_ref(),
+            Style::default().fg(Color::White),
+        )
+    };
+
+    let input = Paragraph::new(input_text).style(style).block(block);
+
+    frame.render_widget(Clear, area);
+    frame.render_widget(input, area);
+}
+
+fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
+    let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
+    let [area] = vertical.areas(area);
+    let [area] = horizontal.areas(area);
+    area
 }
