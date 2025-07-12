@@ -1,81 +1,47 @@
-use std::io;
+use std::{error::Error, time::Duration};
 
-use color_eyre::eyre::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use ratatui::{
-    DefaultTerminal, Frame,
-    buffer::Buffer,
-    layout::{Constraint, Layout, Rect},
-    style::{Color, Stylize},
-    symbols::border,
-    text::Line,
-    widgets::{Block, List, ListItem, Paragraph, Widget},
+use crossterm::event::{self, Event};
+use ratatui::{Terminal, prelude::Backend};
+
+use crate::{
+    handlers::{app::AppHandler, input::InputHandler},
+    models::state::State,
+    ui,
 };
 
-use crate::state::State;
-
 pub struct App {
-    exit: bool,
     state: State,
+    app_handler: AppHandler,
 }
 
 impl App {
-    pub fn new(state: State) -> Self {
-        Self { exit: false, state }
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        let app_handler = AppHandler::new()?;
+        let mut state = State::new();
+
+        app_handler.initialize(&mut state)?;
+
+        Ok(Self { state, app_handler })
     }
 
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        while !self.exit {
-            terminal.draw(|frame| self.render(frame))?;
-            self.handle_events()?;
-        }
-        Ok(())
-    }
+    pub fn run<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn Error>> {
+        loop {
+            terminal.draw(|frame| {
+                ui::draw(frame, &self.state);
+            })?;
 
-    fn render(&self, frame: &mut Frame) {
-        let [border_area] = Layout::vertical([Constraint::Fill(1)])
-            .margin(1)
-            .areas(frame.area());
-
-        let [inner_area] = Layout::vertical([Constraint::Fill(1)])
-            .margin(1)
-            .areas(border_area);
-
-        Block::bordered()
-            .border_type(ratatui::widgets::BorderType::Rounded)
-            .fg(Color::Yellow)
-            .render(border_area, frame.buffer_mut());
-
-        List::new(
-            self.state.get_items()[0]
-                .get_items()
-                .iter()
-                .map(|i| ListItem::from(i.get_text())),
-        )
-        .render(inner_area, frame.buffer_mut());
-    }
-
-    fn handle_events(&mut self) -> io::Result<()> {
-        match event::read()? {
-            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event)
+            let timeout = Duration::from_millis(16); // ~60 FPS
+            if event::poll(timeout)? {
+                if let Event::Key(key) = event::read()? {
+                    InputHandler::handle_key_event(&mut self.state, key, &self.app_handler)?;
+                }
             }
-            _ => {}
-        };
-        Ok(())
-    }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
-        match (key_event.modifiers, key_event.code) {
-            (KeyModifiers::NONE, KeyCode::Char('q')) => self.exit(),
-            (KeyModifiers::CONTROL, KeyCode::Char('a')) => {
-                println!("test");
+            if self.state.should_quit {
+                break;
             }
-            _ => {}
         }
-    }
 
-    fn exit(&mut self) {
-        self.exit = true;
+        Ok(())
     }
 }
