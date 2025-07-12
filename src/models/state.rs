@@ -3,7 +3,9 @@ use crate::models::{input::Input, todo::Todo, todo_item::TodoItem};
 pub enum Popup {
     None,
     CreateTodo,
+    RenameTodo,
     CreateTodoItem,
+    RenameTodoItem,
     Delete,
     Rename,
 }
@@ -38,6 +40,22 @@ impl State {
         self.popup = popup;
         match self.popup {
             Popup::None => self.app_state = AppState::Normal,
+            Popup::RenameTodo => {
+                if let Some(todo) = self.get_current_item_mut() {
+                    self.input.value = todo.title.to_owned();
+                    self.input.cursor_to_end();
+                    self.app_state = AppState::Writing
+                }
+            }
+            Popup::RenameTodoItem => {
+                if let Some(todo) = self.get_current_item_mut() {
+                    if let Some(todo_item) = todo.get_current_item_mut() {
+                        self.input.value = todo_item.text.to_owned();
+                        self.input.cursor_to_end();
+                        self.app_state = AppState::Writing
+                    }
+                }
+            }
             _ => self.app_state = AppState::Writing,
         };
     }
@@ -54,8 +72,24 @@ impl State {
                 self.items.push(Todo::new(&self.input.value));
                 self.close_popup();
             }
+            Popup::RenameTodo => {
+                let title = self.input.value.to_owned();
+                if let Some(todo) = self.get_current_item_mut() {
+                    todo.title = title;
+                }
+                self.close_popup();
+            }
             Popup::CreateTodoItem => {
                 self.create_todo_item();
+                self.close_popup();
+            }
+            Popup::RenameTodoItem => {
+                let text = self.input.value.to_owned();
+                if let Some(todo) = self.get_current_item_mut() {
+                    if let Some(todo_item) = todo.get_current_item_mut() {
+                        todo_item.text = text;
+                    }
+                }
                 self.close_popup();
             }
             _ => {}

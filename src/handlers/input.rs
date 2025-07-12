@@ -54,7 +54,9 @@ impl InputHandler {
                 }
             }
             (KeyModifiers::CONTROL, KeyCode::Char('n')) => state.open_popup(Popup::CreateTodo),
+            (KeyModifiers::CONTROL, KeyCode::Char('r')) => state.open_popup(Popup::RenameTodo),
             (KeyModifiers::NONE, KeyCode::Char('n')) => state.open_popup(Popup::CreateTodoItem),
+            (KeyModifiers::NONE, KeyCode::Char('r')) => state.open_popup(Popup::RenameTodoItem),
             _ => {}
         };
         Ok(())

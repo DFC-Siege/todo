@@ -43,8 +43,14 @@ pub fn draw_main(frame: &mut Frame, rect: Rect, state: &State) {
         Popup::CreateTodo => {
             render_create_widget(frame, rect, state, "Create Todo");
         }
+        Popup::RenameTodo => {
+            render_create_widget(frame, rect, state, "Edit Todo");
+        }
         Popup::CreateTodoItem => {
             render_create_widget(frame, rect, state, "Create Todo Item");
+        }
+        Popup::RenameTodoItem => {
+            render_create_widget(frame, rect, state, "Edit Todo Item");
         }
         _ => {}
     }

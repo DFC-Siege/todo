@@ -47,4 +47,8 @@ impl Input {
 
         self.value.remove(self.cursor_position);
     }
+
+    pub fn cursor_to_end(&mut self) {
+        self.cursor_position = self.value.len();
+    }
 }
