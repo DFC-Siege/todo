@@ -18,6 +18,13 @@ impl Todo {
         }
     }
 
+    pub fn move_to_closest(&mut self) {
+        match self.current_item_index {
+            0 => self.next(),
+            _ => self.previous(),
+        };
+    }
+
     pub fn get_current_item_mut(&mut self) -> Option<&mut TodoItem> {
         self.items.get_mut(self.current_item_index)
     }
@@ -30,6 +37,11 @@ impl Todo {
     }
 
     pub fn next(&mut self) -> Option<&TodoItem> {
+        if self.items.is_empty() {
+            self.current_item_index = 0;
+            return None;
+        }
+
         self.current_item_index += 1;
         if self.current_item_index >= self.items.len() {
             self.current_item_index = self.items.len() - 1;

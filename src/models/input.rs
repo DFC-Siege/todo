@@ -43,7 +43,7 @@ impl Input {
     }
 
     pub fn delete(&mut self) {
-        if self.value.is_empty() {
+        if self.value.is_empty() || self.cursor_position >= self.value.len() {
             return;
         }
 

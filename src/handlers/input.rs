@@ -73,7 +73,9 @@ impl InputHandler {
     ) -> Result<(), Box<dyn std::error::Error>> {
         match (key.modifiers, key.code) {
             (KeyModifiers::NONE, KeyCode::Esc) => state.close_popup(),
-            (KeyModifiers::NONE, KeyCode::Char(c)) => state.input.handle_input(c),
+            (KeyModifiers::NONE, KeyCode::Char(c)) | (KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                state.input.handle_input(c)
+            }
             (KeyModifiers::NONE, KeyCode::Left) => state.input.left(),
             (KeyModifiers::NONE, KeyCode::Right) => state.input.right(),
             (KeyModifiers::NONE, KeyCode::Backspace) => state.input.backspace(),

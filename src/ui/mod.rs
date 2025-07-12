@@ -1,5 +1,4 @@
 pub mod app;
-pub mod theme;
 pub mod todo_item;
 pub mod todo_list;
 

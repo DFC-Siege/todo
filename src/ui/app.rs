@@ -7,15 +7,39 @@ use ratatui::{
 };
 
 use crate::{
-    models::state::{Popup, State},
+    models::state::{AppState, Popup, State},
     ui::todo_list,
 };
 
+fn get_help_text(state: &State) -> Line {
+    match state.app_state {
+        AppState::Normal => Line::from(vec![
+            Span::raw("q:quit | h/l:tabs | j/k:items | "),
+            Span::raw("Enter:toggle | n:add | r:rename | d:delete | "),
+            Span::styled("^N^R^D", Style::default().fg(Color::Yellow)),
+            Span::raw(":todo actions"),
+        ]),
+        AppState::Writing => Line::from(vec![
+            Span::styled("Enter", Style::default().fg(Color::Green)),
+            Span::raw(":save | "),
+            Span::styled("Esc", Style::default().fg(Color::Red)),
+            Span::raw(":cancel"),
+        ]),
+        AppState::Confirm => Line::from(vec![
+            Span::styled("y", Style::default().fg(Color::Green)),
+            Span::raw(":yes | "),
+            Span::styled("n", Style::default().fg(Color::Red)),
+            Span::raw(":no"),
+        ]),
+    }
+}
+
 pub fn draw_main(frame: &mut Frame, rect: Rect, state: &State) {
+    let help_text = get_help_text(state);
     let block = Block::new()
-        .title_top(Line::raw("Todo App").alignment(Alignment::Center))
+        .title_top(Line::raw("Todo").alignment(Alignment::Center))
         .borders(Borders::all())
-        .title_bottom(Line::from(vec![Span::raw("q - quit")]).alignment(Alignment::Center));
+        .title_bottom(help_text.alignment(Alignment::Center));
 
     let inner_area = block.inner(rect);
 

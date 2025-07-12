@@ -78,18 +78,30 @@ impl State {
             Popup::DeleteTodo => {
                 if !self.items.is_empty() {
                     self.items.remove(self.current_item_index);
+                    self.move_to_closest();
                 }
             }
             Popup::DeleteTodoItem => {
                 if let Some(todo) = self.get_current_item_mut() {
                     if !todo.items.is_empty() {
                         todo.items.remove(todo.current_item_index);
+                        todo.move_to_closest();
                     }
                 }
             }
             _ => {}
         }
         self.close_popup();
+    }
+
+    fn move_to_closest(&mut self) {
+        if self.items.is_empty() {
+            return;
+        }
+
+        if self.current_item_index >= self.items.len() {
+            self.current_item_index = self.items.len().saturating_sub(1);
+        }
     }
 
     pub fn close_popup(&mut self) {
@@ -102,6 +114,9 @@ impl State {
         match self.popup {
             Popup::CreateTodo => {
                 self.items.push(Todo::new(&self.input.value));
+                if !self.items.is_empty() {
+                    self.current_item_index = self.items.len() - 1;
+                }
                 self.close_popup();
             }
             Popup::RenameTodo => {
@@ -133,6 +148,9 @@ impl State {
 
         if let Some(todo) = self.get_current_item_mut() {
             todo.items.push(TodoItem::new(&value));
+            if !todo.items.is_empty() {
+                todo.current_item_index = todo.items.len() - 1;
+            }
         }
     }
 
@@ -152,15 +170,22 @@ impl State {
     }
 
     pub fn next(&mut self) -> Option<&Todo> {
-        self.current_item_index += 1;
-        if self.current_item_index >= self.items.len() {
-            self.current_item_index = self.items.len() - 1;
+        if self.items.is_empty() {
+            return None;
+        }
+
+        if self.current_item_index < self.items.len().saturating_sub(1) {
+            self.current_item_index += 1;
         }
 
         self.items.get(self.current_item_index)
     }
 
     pub fn previous(&mut self) -> Option<&Todo> {
+        if self.items.is_empty() {
+            return None;
+        }
+
         if self.current_item_index != 0 {
             self.current_item_index -= 1;
         }
