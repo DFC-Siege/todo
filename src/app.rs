@@ -19,7 +19,7 @@ impl App {
         let app_handler = AppHandler::new()?;
         let mut state = State::new();
 
-        app_handler.initialize(&mut state)?;
+        app_handler.load(&mut state)?;
 
         Ok(Self { state, app_handler })
     }

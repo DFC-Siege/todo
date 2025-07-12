@@ -1,5 +1,7 @@
 use crate::models::{input::Input, todo::Todo, todo_item::TodoItem};
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Popup {
     None,
     CreateTodo,
@@ -10,12 +12,14 @@ pub enum Popup {
     DeleteTodoItem,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub enum AppState {
     Normal,
     Writing,
     Confirm,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct State {
     pub items: Vec<Todo>,
     current_item_index: usize,

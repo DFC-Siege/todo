@@ -51,6 +51,7 @@ impl InputHandler {
                 if let Some(todo) = state.get_current_item_mut() {
                     if let Some(todo_item) = todo.get_current_item_mut() {
                         todo_item.toggle();
+                        app_handler.save(state)?;
                     }
                 }
             }
@@ -61,7 +62,7 @@ impl InputHandler {
             (KeyModifiers::NONE, KeyCode::Char('r')) => state.open_popup(Popup::RenameTodoItem),
             (KeyModifiers::NONE, KeyCode::Char('d')) => state.open_popup(Popup::DeleteTodoItem),
             _ => {}
-        };
+        }
         Ok(())
     }
 
@@ -80,7 +81,7 @@ impl InputHandler {
             (KeyModifiers::NONE, KeyCode::Enter) => state.apply_popup(),
             _ => {}
         };
-        Ok(())
+        app_handler.save(state)
     }
 
     fn handle_confirm_state(
@@ -95,6 +96,6 @@ impl InputHandler {
             (KeyModifiers::NONE, KeyCode::Char('y')) => state.confirm_popup(true),
             _ => {}
         };
-        Ok(())
+        app_handler.save(state)
     }
 }

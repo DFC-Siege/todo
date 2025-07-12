@@ -1,6 +1,8 @@
 use crate::models::todo_item::TodoItem;
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Todo {
     pub items: Vec<TodoItem>,
     pub title: String,

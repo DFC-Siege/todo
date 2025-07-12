@@ -1,23 +1,78 @@
-use crate::models::{state::State, todo::Todo, todo_item::TodoItem};
+use crate::models::state::State;
+use std::fs;
+use std::path::PathBuf;
 
-pub struct AppHandler;
+pub struct AppHandler {
+    config_path: PathBuf,
+}
 
 impl AppHandler {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Self {})
+        let config_path = Self::get_config_path()?;
+
+        if let Some(parent) = config_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        Ok(Self { config_path })
     }
 
-    pub fn initialize(&self, state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
-        let mut todo = Todo::new("todo 1");
-        let mut todo_item = TodoItem::new("todo item 1");
-        todo_item.toggle();
-        todo.items.push(todo_item);
-        todo.items.push(TodoItem::new("todo item 2"));
-        state.items.push(todo);
-        let mut todo = Todo::new("todo 2");
-        todo.items.push(TodoItem::new("todo item 1"));
-        todo.items.push(TodoItem::new("todo item 2"));
-        state.items.push(todo);
+    fn get_config_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+        let app_name = "todo";
+        let filename = "state.json";
+
+        #[cfg(target_os = "windows")]
+        {
+            // Windows: %APPDATA%\todo\state.json
+            let appdata =
+                std::env::var("APPDATA").map_err(|_| "APPDATA environment variable not found")?;
+            Ok(PathBuf::from(appdata).join(app_name).join(filename))
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            // macOS: ~/Library/Application Support/todo/state.json
+            let home = std::env::var("HOME").map_err(|_| "HOME environment variable not found")?;
+            Ok(PathBuf::from(home)
+                .join("Library")
+                .join("Application Support")
+                .join(app_name)
+                .join(filename))
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            // Linux: ~/.config/todo/state.json (XDG Base Directory)
+            let config_dir = std::env::var("XDG_CONFIG_HOME")
+                .map(PathBuf::from)
+                .unwrap_or_else(|_| {
+                    let home = std::env::var("HOME").expect("HOME environment variable not found");
+                    PathBuf::from(home).join(".config")
+                });
+            Ok(config_dir.join(app_name).join(filename))
+        }
+
+        #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+        {
+            // Fallback for other systems
+            Ok(PathBuf::from(".").join(filename))
+        }
+    }
+
+    pub fn save(&self, state: &State) -> Result<(), Box<dyn std::error::Error>> {
+        let json = serde_json::to_string_pretty(state)?;
+        fs::write(&self.config_path, json)?;
+        Ok(())
+    }
+
+    pub fn load(&self, state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
+        if self.config_path.exists() {
+            let json = fs::read_to_string(&self.config_path)?;
+            let loaded_state: State = serde_json::from_str(&json)?;
+            *state = loaded_state;
+        } else {
+            self.save(state)?;
+        }
         Ok(())
     }
 }
