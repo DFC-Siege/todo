@@ -1,40 +1,58 @@
 use std::io;
 
+use color_eyre::eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
-    layout::Rect,
-    style::Stylize,
+    layout::{Constraint, Layout, Rect},
+    style::{Color, Stylize},
     symbols::border,
     text::Line,
-    widgets::{Block, Widget},
+    widgets::{Block, List, ListItem, Paragraph, Widget},
 };
 
-use crate::{todo::Todo, todo_item::TodoItem};
+use crate::state::State;
 
-#[derive(Debug, Default)]
 pub struct App {
     exit: bool,
-    todos: Vec<Todo>,
+    state: State,
 }
 
 impl App {
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        let mut todo = Todo::default();
-        let todo_item = TodoItem::default();
-        todo.add_item(todo_item);
-        self.todos.push(todo);
+    pub fn new(state: State) -> Self {
+        Self { exit: false, state }
+    }
 
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
-            terminal.draw(|frame| self.draw(frame))?;
+            terminal.draw(|frame| self.render(frame))?;
             self.handle_events()?;
         }
         Ok(())
     }
 
-    fn draw(&self, frame: &mut Frame) {
-        frame.render_widget(self, frame.area())
+    fn render(&self, frame: &mut Frame) {
+        let [border_area] = Layout::vertical([Constraint::Fill(1)])
+            .margin(1)
+            .areas(frame.area());
+
+        let [inner_area] = Layout::vertical([Constraint::Fill(1)])
+            .margin(1)
+            .areas(border_area);
+
+        Block::bordered()
+            .border_type(ratatui::widgets::BorderType::Rounded)
+            .fg(Color::Yellow)
+            .render(border_area, frame.buffer_mut());
+
+        List::new(
+            self.state.get_items()[0]
+                .get_items()
+                .iter()
+                .map(|i| ListItem::from(i.get_text())),
+        )
+        .render(inner_area, frame.buffer_mut());
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
@@ -55,40 +73,9 @@ impl App {
             }
             _ => {}
         }
-
-        for todo in &self.todos {
-            todo.handle_events(key_event);
-        }
     }
 
     fn exit(&mut self) {
         self.exit = true;
-    }
-}
-
-impl Widget for &App {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Todo's ".bold());
-        let instructions = Line::from(vec![
-            " new todo ".into(),
-            "<^a>".blue().bold(),
-            " delete todo ".into(),
-            "<^d>".blue().bold(),
-            " move tabs ".into(),
-            "<^h-l>".blue().bold(),
-            " move between items ".into(),
-            "<j-k>".blue().bold(),
-            " add item ".into(),
-            "<a>".blue().bold(),
-            " delete item ".into(),
-            "<d>".blue().bold(),
-            " Quit ".into(),
-            "<Q> ".blue().bold(),
-        ]);
-        Block::bordered()
-            .title(title.centered())
-            .title_bottom(instructions.centered())
-            .border_set(border::THICK)
-            .render(area, buf);
     }
 }

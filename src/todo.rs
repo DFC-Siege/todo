@@ -1,14 +1,24 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::widgets::Widget;
+use ratatui::{
+    text::Line,
+    widgets::{Block, List, ListItem, ListState, Padding, StatefulWidget},
+};
 
 use crate::todo_item::TodoItem;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone)]
 pub struct Todo {
     items: Vec<TodoItem>,
+    title: String,
 }
 
 impl Todo {
+    pub fn new(title: &str) -> Self {
+        Self {
+            title: title.to_string(),
+            items: Vec::new(),
+        }
+    }
     pub fn add_item(&mut self, item: TodoItem) {
         self.items.push(item);
     }
@@ -19,19 +29,7 @@ impl Todo {
         }
     }
 
-    pub fn handle_events(&self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Char('a') => {}
-            KeyCode::Char('d') => {}
-            _ => {}
-        };
-    }
-}
-
-impl Widget for &Todo {
-    fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer)
-    where
-        Self: Sized,
-    {
+    pub fn get_items(&self) -> &[TodoItem] {
+        &self.items
     }
 }
