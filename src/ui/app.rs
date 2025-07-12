@@ -1,6 +1,6 @@
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Flex, Layout, Rect},
+    layout::{Alignment, Constraint, Flex, Layout, Position, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, Paragraph, Tabs, Widget},
@@ -40,19 +40,22 @@ pub fn draw_main(frame: &mut Frame, rect: Rect, state: &State) {
 
     match state.popup {
         Popup::None => {}
-        Popup::Create => {
-            render_create_widget(frame, rect, state);
+        Popup::CreateTodo => {
+            render_create_widget(frame, rect, state, "Create Todo");
+        }
+        Popup::CreateTodoItem => {
+            render_create_widget(frame, rect, state, "Create Todo Item");
         }
         _ => {}
     }
 }
 
-fn render_create_widget(frame: &mut Frame, rect: Rect, state: &State) {
-    let block = Block::bordered().title("Create new todo");
+fn render_create_widget(frame: &mut Frame, rect: Rect, state: &State, message: &str) {
+    let block = Block::bordered().title(message);
     let area = popup_area(rect, 60, 20);
 
     let (input_text, style) = if state.input.value.is_empty() {
-        ("Enter title...", Style::default().fg(Color::Gray))
+        ("Enter name...", Style::default().fg(Color::Gray))
     } else {
         (
             state.input.value.as_ref(),
@@ -60,7 +63,13 @@ fn render_create_widget(frame: &mut Frame, rect: Rect, state: &State) {
         )
     };
 
+    let inner = block.inner(area);
     let input = Paragraph::new(input_text).style(style).block(block);
+
+    frame.set_cursor_position(Position::new(
+        inner.x + state.input.get_cursor_position() as u16,
+        inner.y,
+    ));
 
     frame.render_widget(Clear, area);
     frame.render_widget(input, area);

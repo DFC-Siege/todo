@@ -53,7 +53,8 @@ impl InputHandler {
                     }
                 }
             }
-            (KeyModifiers::CONTROL, KeyCode::Char('n')) => state.open_popup(Popup::Create),
+            (KeyModifiers::CONTROL, KeyCode::Char('n')) => state.open_popup(Popup::CreateTodo),
+            (KeyModifiers::NONE, KeyCode::Char('n')) => state.open_popup(Popup::CreateTodoItem),
             _ => {}
         };
         Ok(())
@@ -65,12 +66,13 @@ impl InputHandler {
         app_handler: &AppHandler,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match (key.modifiers, key.code) {
-            (KeyModifiers::NONE, KeyCode::Esc) => state.open_popup(Popup::None),
+            (KeyModifiers::NONE, KeyCode::Esc) => state.close_popup(),
             (KeyModifiers::NONE, KeyCode::Char(c)) => state.input.handle_input(c),
             (KeyModifiers::NONE, KeyCode::Left) => state.input.left(),
             (KeyModifiers::NONE, KeyCode::Right) => state.input.right(),
             (KeyModifiers::NONE, KeyCode::Backspace) => state.input.backspace(),
-            (KeyModifiers::NONE, KeyCode::Backspace) => state.input.delete(),
+            (KeyModifiers::NONE, KeyCode::Delete) => state.input.delete(),
+            (KeyModifiers::NONE, KeyCode::Enter) => state.apply_popup(),
             _ => {}
         };
         Ok(())

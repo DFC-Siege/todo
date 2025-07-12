@@ -13,6 +13,10 @@ impl Input {
         self.right();
     }
 
+    pub fn get_cursor_position(&self) -> usize {
+        self.cursor_position
+    }
+
     pub fn left(&mut self) {
         if self.cursor_position == 0 {
             return;
@@ -42,6 +46,5 @@ impl Input {
         }
 
         self.value.remove(self.cursor_position);
-        self.right();
     }
 }

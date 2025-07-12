@@ -1,8 +1,9 @@
-use crate::models::{input::Input, todo::Todo};
+use crate::models::{input::Input, todo::Todo, todo_item::TodoItem};
 
 pub enum Popup {
     None,
-    Create,
+    CreateTodo,
+    CreateTodoItem,
     Delete,
     Rename,
 }
@@ -39,6 +40,34 @@ impl State {
             Popup::None => self.app_state = AppState::Normal,
             _ => self.app_state = AppState::Writing,
         };
+    }
+
+    pub fn close_popup(&mut self) {
+        self.input = Input::default();
+        self.app_state = AppState::Normal;
+        self.popup = Popup::None;
+    }
+
+    pub fn apply_popup(&mut self) {
+        match self.popup {
+            Popup::CreateTodo => {
+                self.items.push(Todo::new(&self.input.value));
+                self.close_popup();
+            }
+            Popup::CreateTodoItem => {
+                self.create_todo_item();
+                self.close_popup();
+            }
+            _ => {}
+        };
+    }
+
+    fn create_todo_item(&mut self) {
+        let value = self.input.value.to_owned();
+
+        if let Some(todo) = self.get_current_item_mut() {
+            todo.items.push(TodoItem::new(&value));
+        }
     }
 
     pub fn get_current_item(&self) -> Option<&Todo> {
