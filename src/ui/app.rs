@@ -1,9 +1,9 @@
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Flex, Layout, Position, Rect},
+    layout::{Alignment, Constraint, Direction, Flex, Layout, Position, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph, Tabs, Widget},
+    widgets::{Block, Borders, Clear, Paragraph, Tabs, Widget, Wrap},
 };
 
 use crate::{
@@ -52,7 +52,12 @@ pub fn draw_main(frame: &mut Frame, rect: Rect, state: &State) {
         Popup::RenameTodoItem => {
             render_create_widget(frame, rect, state, "Edit Todo Item");
         }
-        _ => {}
+        Popup::DeleteTodo => {
+            render_confirm_widget(frame, rect, "Delete Todo");
+        }
+        Popup::DeleteTodoItem => {
+            render_confirm_widget(frame, rect, "Delete Todo Item");
+        }
     }
 }
 
@@ -79,6 +84,36 @@ fn render_create_widget(frame: &mut Frame, rect: Rect, state: &State, message: &
 
     frame.render_widget(Clear, area);
     frame.render_widget(input, area);
+}
+
+fn render_confirm_widget(frame: &mut Frame, rect: Rect, message: &str) {
+    let block = Block::bordered().title("Confirm");
+    let area = popup_area(rect, 60, 30);
+
+    frame.render_widget(Clear, area);
+
+    let inner = block.inner(area);
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(1),    // Message area
+            Constraint::Length(1), // Spacing
+            Constraint::Length(1), // Instructions
+        ])
+        .split(inner);
+
+    let message_widget = Paragraph::new(message)
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: true });
+
+    let instructions = Paragraph::new("Press 'y' to confirm, 'n' to cancel")
+        .style(Style::default().fg(Color::Gray))
+        .alignment(Alignment::Center);
+
+    frame.render_widget(block, area);
+    frame.render_widget(message_widget, chunks[0]);
+    frame.render_widget(instructions, chunks[2]);
 }
 
 fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {

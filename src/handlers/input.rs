@@ -16,6 +16,7 @@ impl InputHandler {
         match state.app_state {
             AppState::Normal => Self::handle_normal_state(state, key, app_handler),
             AppState::Writing => Self::handle_writing_state(state, key, app_handler),
+            AppState::Confirm => Self::handle_confirm_state(state, key, app_handler),
         }?;
 
         Ok(())
@@ -55,8 +56,10 @@ impl InputHandler {
             }
             (KeyModifiers::CONTROL, KeyCode::Char('n')) => state.open_popup(Popup::CreateTodo),
             (KeyModifiers::CONTROL, KeyCode::Char('r')) => state.open_popup(Popup::RenameTodo),
+            (KeyModifiers::CONTROL, KeyCode::Char('d')) => state.open_popup(Popup::DeleteTodo),
             (KeyModifiers::NONE, KeyCode::Char('n')) => state.open_popup(Popup::CreateTodoItem),
             (KeyModifiers::NONE, KeyCode::Char('r')) => state.open_popup(Popup::RenameTodoItem),
+            (KeyModifiers::NONE, KeyCode::Char('d')) => state.open_popup(Popup::DeleteTodoItem),
             _ => {}
         };
         Ok(())
@@ -75,6 +78,21 @@ impl InputHandler {
             (KeyModifiers::NONE, KeyCode::Backspace) => state.input.backspace(),
             (KeyModifiers::NONE, KeyCode::Delete) => state.input.delete(),
             (KeyModifiers::NONE, KeyCode::Enter) => state.apply_popup(),
+            _ => {}
+        };
+        Ok(())
+    }
+
+    fn handle_confirm_state(
+        state: &mut State,
+        key: KeyEvent,
+        app_handler: &AppHandler,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        match (key.modifiers, key.code) {
+            (KeyModifiers::NONE, KeyCode::Esc) | (KeyModifiers::NONE, KeyCode::Char('n')) => {
+                state.confirm_popup(false)
+            }
+            (KeyModifiers::NONE, KeyCode::Char('y')) => state.confirm_popup(true),
             _ => {}
         };
         Ok(())

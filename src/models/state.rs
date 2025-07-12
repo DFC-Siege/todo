@@ -6,13 +6,14 @@ pub enum Popup {
     RenameTodo,
     CreateTodoItem,
     RenameTodoItem,
-    Delete,
-    Rename,
+    DeleteTodo,
+    DeleteTodoItem,
 }
 
 pub enum AppState {
     Normal,
     Writing,
+    Confirm,
 }
 
 pub struct State {
@@ -40,6 +41,8 @@ impl State {
         self.popup = popup;
         match self.popup {
             Popup::None => self.app_state = AppState::Normal,
+            Popup::CreateTodo => self.app_state = AppState::Writing,
+            Popup::CreateTodoItem => self.app_state = AppState::Writing,
             Popup::RenameTodo => {
                 if let Some(todo) = self.get_current_item_mut() {
                     self.input.value = todo.title.to_owned();
@@ -56,8 +59,33 @@ impl State {
                     }
                 }
             }
-            _ => self.app_state = AppState::Writing,
+            Popup::DeleteTodo => self.app_state = AppState::Confirm,
+            Popup::DeleteTodoItem => self.app_state = AppState::Confirm,
         };
+    }
+
+    pub fn confirm_popup(&mut self, value: bool) {
+        if !value {
+            self.close_popup();
+            return;
+        }
+
+        match self.popup {
+            Popup::DeleteTodo => {
+                if !self.items.is_empty() {
+                    self.items.remove(self.current_item_index);
+                }
+            }
+            Popup::DeleteTodoItem => {
+                if let Some(todo) = self.get_current_item_mut() {
+                    if !todo.items.is_empty() {
+                        todo.items.remove(todo.current_item_index);
+                    }
+                }
+            }
+            _ => {}
+        }
+        self.close_popup();
     }
 
     pub fn close_popup(&mut self) {
