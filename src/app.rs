@@ -33,7 +33,9 @@ impl App {
             let timeout = Duration::from_millis(16); // ~60 FPS
             if event::poll(timeout)? {
                 if let Event::Key(key) = event::read()? {
-                    InputHandler::handle_key_event(&mut self.state, key, &self.app_handler)?;
+                    if key.is_press() {
+                        InputHandler::handle_key_event(&mut self.state, key, &self.app_handler)?;
+                    }
                 }
             }
 
