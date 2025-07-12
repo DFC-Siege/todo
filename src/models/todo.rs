@@ -18,10 +18,6 @@ impl Todo {
         }
     }
 
-    pub fn get_current_item(&self) -> Option<&TodoItem> {
-        self.items.get(self.current_item_index)
-    }
-
     pub fn get_current_item_mut(&mut self) -> Option<&mut TodoItem> {
         self.items.get_mut(self.current_item_index)
     }

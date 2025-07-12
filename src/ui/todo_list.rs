@@ -2,7 +2,7 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    widgets::{Block, List, ListState, Padding, Widget},
+    widgets::{Block, List, ListState, Padding},
 };
 
 use crate::{models::state::State, ui::todo_item};
